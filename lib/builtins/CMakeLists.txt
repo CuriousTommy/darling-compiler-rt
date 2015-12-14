@@ -2,6 +2,17 @@
 # generic implementations of the core runtime library along with optimized
 # architecture-specific code in various subdirectories.
 
+if (DARLING)
+	set(BUILTIN_SUPPORTED_OS "osx")
+	set(APPLE 1)
+	set(HAVE_UNWIND_H 1)
+	add_definitions(-U__APPLE__) # To use __ELF__
+	enable_language(C ASM)
+	
+	include_directories(${DARLING_TOP_DIRECTORY}/src/libunwind/include)
+	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -nostdlib -Wl,--version-script=${DARLING_TOP_DIRECTORY}/darwin.map")
+endif (DARLING)
+
 set(GENERIC_SOURCES
   absvdi2.c
   absvsi2.c
@@ -342,6 +353,36 @@ set(mips_SOURCES ${GENERIC_SOURCES})
 set(mipsel_SOURCES ${mips_SOURCES})
 set(mips64_SOURCES ${mips_SOURCES})
 set(mips64el_SOURCES ${mips_SOURCES})
+
+if (DARLING)
+	SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib${SUFFIX}/darling")
+	SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE) 
+	SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+	
+	if (BITS EQUAL 64)
+		set(arch "x86_64")
+	else (BITS EQUAL 64)
+		set(arch "i386")
+	endif (BITS EQUAL 64)
+	
+	foreach (_file ${${arch}_SOURCES})
+        if (${_file} MATCHES ${arch}/*)
+          get_filename_component(_name ${_file} NAME)
+          string(REPLACE ".S" ".c" _cname "${_name}")
+          list(REMOVE_ITEM ${arch}_SOURCES ${_cname})
+        endif ()
+      endforeach ()
+
+	if (BITS EQUAL 64)
+		add_library(compiler_rt SHARED ${x86_64_SOURCES})
+	else (BITS EQUAL 64)
+		add_library(compiler_rt SHARED ${i386_SOURCES})
+	endif (BITS EQUAL 64)
+	target_link_libraries(compiler_rt PRIVATE unwind)
+	install(TARGETS compiler_rt DESTINATION lib${SUFFIX}/darling)
+
+	return ()
+endif (DARLING)
 
 add_custom_target(builtins)
 

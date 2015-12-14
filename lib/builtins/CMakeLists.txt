@@ -10,7 +10,9 @@ if (DARLING)
 	enable_language(C ASM)
 	
 	include_directories(${DARLING_TOP_DIRECTORY}/src/libunwind/include)
+	include_directories(${DARLING_TOP_DIRECTORY}/platform-include)
 	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -nostdlib -Wl,--version-script=${DARLING_TOP_DIRECTORY}/darwin.map")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -nostdinc")
 endif (DARLING)
 
 set(GENERIC_SOURCES

@@ -357,7 +357,7 @@ set(mips64_SOURCES ${mips_SOURCES})
 set(mips64el_SOURCES ${mips_SOURCES})
 
 if (DARLING)
-	SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib${SUFFIX}/darling")
+	SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/darling")
 	SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE) 
 	SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 	
@@ -381,7 +381,7 @@ if (DARLING)
 		add_library(compiler_rt SHARED ${i386_SOURCES})
 	endif (BITS EQUAL 64)
 	target_link_libraries(compiler_rt PRIVATE unwind)
-	install(TARGETS compiler_rt DESTINATION lib${SUFFIX}/darling)
+	install(TARGETS compiler_rt DESTINATION ${CMAKE_INSTALL_LIBDIR}/darling)
 
 	return ()
 endif (DARLING)

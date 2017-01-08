@@ -6,12 +6,12 @@ if (DARLING)
 	set(BUILTIN_SUPPORTED_OS "osx")
 	set(APPLE 1)
 	set(HAVE_UNWIND_H 1)
-	add_definitions(-U__APPLE__) # To use __ELF__
+	#add_definitions(-U__APPLE__) # To use __ELF__
 	enable_language(C ASM)
 	
 	include_directories(${DARLING_TOP_DIRECTORY}/src/libunwind/include)
 	include_directories(${DARLING_TOP_DIRECTORY}/platform-include)
-	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -nostdlib -Wl,--version-script=${DARLING_TOP_DIRECTORY}/darwin.map")
+	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -nostdlib -Wl,-dylib_install_name,/usr/lib/system/libcompiler_rt.dylib -Wl,-flat_namespace -Wl,-undefined,suppress")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -nostdinc")
 endif (DARLING)
 
@@ -376,11 +376,10 @@ if (DARLING)
       endforeach ()
 
 	if (BITS EQUAL 64)
-		add_library(compiler_rt SHARED ${x86_64_SOURCES})
+		add_darling_library(compiler_rt SHARED ${x86_64_SOURCES})
 	else (BITS EQUAL 64)
-		add_library(compiler_rt SHARED ${i386_SOURCES})
+		add_darling_library(compiler_rt SHARED ${i386_SOURCES})
 	endif (BITS EQUAL 64)
-	target_link_libraries(compiler_rt PRIVATE unwind)
 	install(TARGETS compiler_rt DESTINATION ${CMAKE_INSTALL_LIBDIR}/darling)
 
 	return ()

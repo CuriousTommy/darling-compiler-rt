@@ -357,10 +357,6 @@ set(mips64_SOURCES ${mips_SOURCES})
 set(mips64el_SOURCES ${mips_SOURCES})
 
 if (DARLING)
-	SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/darling")
-	SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE) 
-	SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-	
 	if (BITS EQUAL 64)
 		set(arch "x86_64")
 	else (BITS EQUAL 64)
@@ -377,10 +373,15 @@ if (DARLING)
 
 	if (BITS EQUAL 64)
 		add_darling_library(compiler_rt SHARED ${x86_64_SOURCES})
+
+		set(CMAKE_AR "${CMAKE_BINARY_DIR}/src/external/cctools-port/cctools/ar/x86_64-apple-darwin11-ar")
+		set(CMAKE_RANLIB "${CMAKE_BINARY_DIR}/src/external/cctools-port/cctools/misc/ranlib")
+		add_library(compiler_rt_static STATIC ${x86_64_SOURCES})
+		add_dependencies(compiler_rt_static ranlib x86_64-apple-darwin11-ar)
 	else (BITS EQUAL 64)
 		add_darling_library(compiler_rt SHARED ${i386_SOURCES})
 	endif (BITS EQUAL 64)
-	install(TARGETS compiler_rt DESTINATION ${CMAKE_INSTALL_LIBDIR}/darling)
+	install(TARGETS compiler_rt DESTINATION libexec/darling/usr/lib/system)
 
 	return ()
 endif (DARLING)

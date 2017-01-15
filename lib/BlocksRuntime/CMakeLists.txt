@@ -6,8 +6,10 @@ if(COMMAND cmake_policy)
     cmake_policy(SET CMP0003 NEW)
 endif(COMMAND cmake_policy)
 
+include(darling_static_lib)
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -nostdinc")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -nostdlib -Wl,-dylib_install_name,/usr/lib/system/libsystem_blocks.dylib -Wl,-flat_namespace -Wl,-undefined,suppress")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -nostdlib -Wl,-flat_namespace -Wl,-undefined,suppress")
 
 add_definitions(-DTARGET_OS_MAC=1)
 add_definitions(-DHAVE_STDINT_H=1)
@@ -18,7 +20,13 @@ set(blocks_sources
 	runtime.c
 )
 
-add_darling_library(system_blocks SHARED ${blocks_sources})
-target_link_libraries(system_blocks PRIVATE system_c system_kernel system_m system_malloc)
+set(CMAKE_AR "${CMAKE_BINARY_DIR}/src/external/cctools-port/cctools/ar/x86_64-apple-darwin11-ar" PARENT_SCOPE)
+set(CMAKE_RANLIB "${CMAKE_BINARY_DIR}/src/external/cctools-port/cctools/misc/ranlib" PARENT_SCOPE)
 
-install(TARGETS system_blocks DESTINATION ${CMAKE_INSTALL_LIBDIR}/darling)
+set(DYLIB_INSTALL_NAME "/usr/lib/system/libsystem_blocks.dylib")
+add_darling_library(system_blocks SHARED ${blocks_sources})
+add_library(system_blocks_static STATIC ${blocks_sources})
+target_link_libraries(system_blocks PRIVATE system_c system_kernel system_m system_malloc)
+add_dependencies(system_blocks_static ranlib x86_64-apple-darwin11-ar)
+
+install(TARGETS system_blocks DESTINATION libexec/darling/usr/lib/system)

@@ -11,6 +11,8 @@ include(darling_static_lib)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -nostdinc")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -nostdlib -Wl,-flat_namespace -Wl,-undefined,suppress")
 
+include_directories(${CMAKE_SOURCE_DIR}/src/libc/darwin)
+
 add_definitions(-DTARGET_OS_MAC=1)
 add_definitions(-DHAVE_STDINT_H=1)
 add_definitions(-D__APPLE__ -D__DYNAMIC__)
@@ -28,5 +30,8 @@ add_darling_library(system_blocks SHARED ${blocks_sources})
 add_library(system_blocks_static STATIC ${blocks_sources})
 target_link_libraries(system_blocks PRIVATE system_c system_kernel system_m system_malloc)
 add_dependencies(system_blocks_static ranlib x86_64-apple-darwin11-ar)
+
+make_fat(system_blocks)
+make_fat(system_blocks_static)
 
 install(TARGETS system_blocks DESTINATION libexec/darling/usr/lib/system)

@@ -12,7 +12,7 @@ if (DARLING)
 	include_directories(${CMAKE_SOURCE_DIR}/src/libunwind/include)
 	include_directories(${CMAKE_SOURCE_DIR}/platform-include)
 	include_directories(${CMAKE_SOURCE_DIR}/src/libc/darwin)
-	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -nostdlib -Wl,-no_arch_warnings -Wl,-flat_namespace -Wl,-undefined,suppress")
+	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -nostdlib -Wl,-no_arch_warnings")
 	set(DYLIB_INSTALL_NAME "/usr/lib/system/libcompiler_rt.dylib")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -nostdinc")
 endif (DARLING)
@@ -378,8 +378,20 @@ if (DARLING)
 	add_library(compiler_rt_i386 OBJECT ${i386_SOURCES})
 	set_target_properties(compiler_rt_i386 PROPERTIES COMPILE_FLAGS "-arch i386")
 
-	add_darling_library(compiler_rt SHARED $<TARGET_OBJECTS:compiler_rt_x86_64> $<TARGET_OBJECTS:compiler_rt_i386>)
-	make_fat(compiler_rt)
+	add_circular(compiler_rt FAT
+		OBJECTS
+			$<TARGET_OBJECTS:compiler_rt_x86_64>
+			$<TARGET_OBJECTS:compiler_rt_i386>
+		SIBLINGS
+			unwind
+			system_pthread
+			system_m
+			system_malloc
+			system_c
+			system_kernel
+			system_dyld
+	)
+	#make_fat(compiler_rt)
 
 	set(CMAKE_AR "${CMAKE_BINARY_DIR}/src/external/cctools-port/cctools/ar/x86_64-apple-darwin11-ar")
 	set(CMAKE_RANLIB "${CMAKE_BINARY_DIR}/src/external/cctools-port/cctools/misc/ranlib")

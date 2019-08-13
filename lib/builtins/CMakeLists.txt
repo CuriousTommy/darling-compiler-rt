@@ -370,13 +370,21 @@ function(nomuldefs arch)
 endfunction(nomuldefs)
 
 if (DARLING)
-	nomuldefs("x86_64")
-	nomuldefs("i386")
+	if (TARGET_x86_64)
+		nomuldefs("x86_64")
+		add_darling_object_library(compiler_rt_x86_64 ${x86_64_SOURCES})
+		set_target_properties(compiler_rt_x86_64 PROPERTIES COMPILE_FLAGS "-arch x86_64")
+	else (TARGET_x86_64)
+		add_darling_object_library(compiler_rt_x86_64 empty.c)
+	endif (TARGET_x86_64)
 
-	add_library(compiler_rt_x86_64 OBJECT ${x86_64_SOURCES})
-	set_target_properties(compiler_rt_x86_64 PROPERTIES COMPILE_FLAGS "-arch x86_64")
-	add_library(compiler_rt_i386 OBJECT ${i386_SOURCES})
-	set_target_properties(compiler_rt_i386 PROPERTIES COMPILE_FLAGS "-arch i386")
+	if (TARGET_i386)
+		nomuldefs("i386")
+		add_darling_object_library(compiler_rt_i386 ${i386_SOURCES})
+		set_target_properties(compiler_rt_i386 PROPERTIES COMPILE_FLAGS "-arch i386")
+	else (TAGET_i386)
+		add_darling_object_library(compiler_rt_i386 empty.c)
+	endif (TARGET_i386)
 
 	add_circular(compiler_rt FAT
 		OBJECTS
@@ -395,10 +403,12 @@ if (DARLING)
 
 	set(CMAKE_AR "${CMAKE_BINARY_DIR}/src/external/cctools-port/cctools/ar/x86_64-apple-darwin11-ar")
 	set(CMAKE_RANLIB "${CMAKE_BINARY_DIR}/src/external/cctools-port/cctools/misc/ranlib")
-	add_library(compiler_rt_static32 STATIC $<TARGET_OBJECTS:compiler_rt_i386>)
+
 	add_library(compiler_rt_static64 STATIC $<TARGET_OBJECTS:compiler_rt_x86_64>)
-	add_dependencies(compiler_rt_static32 ranlib x86_64-apple-darwin11-ar)
 	add_dependencies(compiler_rt_static64 ranlib x86_64-apple-darwin11-ar)
+
+	add_library(compiler_rt_static32 STATIC $<TARGET_OBJECTS:compiler_rt_i386>)
+	add_dependencies(compiler_rt_static32 ranlib x86_64-apple-darwin11-ar)
 
 	install(TARGETS compiler_rt DESTINATION libexec/darling/usr/lib/system)
 

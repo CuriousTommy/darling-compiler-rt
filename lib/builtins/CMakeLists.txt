@@ -377,34 +377,61 @@ if (DARLING)
 	else (TARGET_x86_64)
 		add_darling_object_library(compiler_rt_x86_64 empty.c)
 	endif (TARGET_x86_64)
-
+    
+	if (TARGET_AArch64)
+		nomuldefs("arm64")
+		add_darling_object_library(compiler_rt_arm64 ${arm64_SOURCES})
+		set_target_properties(compiler_rt_arm64 PROPERTIES COMPILE_FLAGS "-arch arm64")
+	else (TARGET_AArch64)
+		add_darling_object_library(compiler_rt_arm64 empty.c)
+	endif (TARGET_AArch64)
+    
 	if (TARGET_i386)
 		nomuldefs("i386")
 		add_darling_object_library(compiler_rt_i386 ${i386_SOURCES})
 		set_target_properties(compiler_rt_i386 PROPERTIES COMPILE_FLAGS "-arch i386")
-	else (TAGET_i386)
+	else (TARGET_i386)
 		add_darling_object_library(compiler_rt_i386 empty.c)
 	endif (TARGET_i386)
-
-	add_circular(compiler_rt FAT
-		OBJECTS
-			$<TARGET_OBJECTS:compiler_rt_x86_64>
-			$<TARGET_OBJECTS:compiler_rt_i386>
-		SIBLINGS
-			unwind
-			system_pthread
-			system_m
-			system_malloc
-			system_c
-			system_kernel
-			system_dyld
-	)
+	
+	if (TARGET_x86_64 OR TARGET_i386)
+		add_circular(compiler_rt FAT
+			OBJECTS
+				$<TARGET_OBJECTS:compiler_rt_x86_64>
+				$<TARGET_OBJECTS:compiler_rt_i386>
+			SIBLINGS
+				unwind
+				system_pthread
+				system_m
+				system_malloc
+				system_c
+				system_kernel
+				system_dyld
+		)
+	elseif (TARGET_AArch64)
+		add_circular(compiler_rt FAT
+			OBJECTS
+				$<TARGET_OBJECTS:compiler_rt_arm64>
+			SIBLINGS
+				unwind
+				system_pthread
+				system_m
+				system_malloc
+				system_c
+				system_kernel
+				system_dyld
+		)
+	endif()
 	#make_fat(compiler_rt)
 
 	set(CMAKE_AR "${CMAKE_BINARY_DIR}/src/external/cctools-port/cctools/ar/x86_64-apple-darwin11-ar")
 	set(CMAKE_RANLIB "${CMAKE_BINARY_DIR}/src/external/cctools-port/cctools/misc/ranlib")
 
-	add_library(compiler_rt_static64 STATIC $<TARGET_OBJECTS:compiler_rt_x86_64>)
+	if (TARGET_x86_64)
+		add_library(compiler_rt_static64 STATIC $<TARGET_OBJECTS:compiler_rt_x86_64>)
+	elseif (TARGET_AArch64)
+		add_library(compiler_rt_static64 STATIC $<TARGET_OBJECTS:compiler_rt_arm64>)
+	endif ()
 	add_dependencies(compiler_rt_static64 ranlib x86_64-apple-darwin11-ar)
 
 	add_library(compiler_rt_static32 STATIC $<TARGET_OBJECTS:compiler_rt_i386>)
